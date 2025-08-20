@@ -48,6 +48,7 @@ def main(args):
     how="left"
     )
     print(tonal_audiometry)
+    tonal_audiometry = tonal_audiometry[~tonal_audiometry["NAZWA_AUDIOMETRII_t"].isnull()]
     tonal_audiometry.to_csv("data/tonal_audiometry.csv")   
 
 

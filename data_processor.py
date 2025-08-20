@@ -22,13 +22,19 @@ class FileProcessor:
             for audiometry_type in self.audiometry_types:
                 if sheet == audiometry_type:
                     try:
-                        df = self.f.parse(sheet)
+                        df = self.f.parse(sheet, dtype={"PESEL": str})
                         #give different names for all columns except the matching ones and columns to drop
                         df = df.rename(columns={col: f"{col}_{self.audiometry_map[sheet][0]}" for col in df.columns if col not in exclude_cols})
                         self.audiometries[self.audiometry_map[sheet]] = df
                         print(f'{self.audiometry_map[sheet]} audiometry reading completed')
                     except ValueError as e:
                         print(f"Nie udało się wczytać arkusza '{sheet}': {e}")
+
+
+    def read_patients(self):
+        for sheet in self.f.sheet_names:
+            if sheet == 'Pacjenci':
+                self.df_patients = self.f.parse(sheet, dtype={"PESEL": str})
 
 
     def filter_audiometry(self):
@@ -40,7 +46,3 @@ class FileProcessor:
             self.audiometries[key] = df
             
             
-    def read_patients(self):
-        for sheet in self.f.sheet_names:
-            if sheet == 'Pacjenci':
-                self.df_patients = self.f.parse(sheet)

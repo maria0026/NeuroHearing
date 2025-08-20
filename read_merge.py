@@ -41,15 +41,9 @@ def main(args):
     print("Filtering completed")
     print(processor.audiometries)
 
-    tonal_audiometry = pd.merge(
-    processor.df_patients,
-    processor.audiometries['tonal'],
-    on=["PESEL", "NUMER_W_JEDNOSTCE", "NUMER_HISTORII_CHOROBY"],
-    how="left"
-    )
-    print(tonal_audiometry)
-    tonal_audiometry = tonal_audiometry[~tonal_audiometry["NAZWA_AUDIOMETRII_t"].isnull()]
-    tonal_audiometry.to_csv("data/tonal_audiometry.csv")   
+    processor.merge()
+    print("Merging completed")
+    print(processor.audiometries)
 
 
 if __name__=="__main__":

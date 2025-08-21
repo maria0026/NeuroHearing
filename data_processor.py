@@ -45,4 +45,14 @@ class FileProcessor:
             )
             self.audiometries[key] = df
             
-            
+    def merge(self):
+        for key, df in self.audiometries.items():
+            df_merged = pd.merge(
+            self.df_patients,
+            df,
+            on=self.match_columns,
+            how="left"
+            )
+            df_merged = df_merged[~df_merged[f'NAZWA_AUDIOMETRII_{key[0]}'].isnull()]
+            self.audiometries[key] = df_merged
+            df_merged.to_csv(f'data/audiometry_{key}.csv')

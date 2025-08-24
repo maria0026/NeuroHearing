@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neurohearing"
+version = "0.1.0"
+description = "Analiza danych MRI i słuchowych"
+authors = [
+    { name = "Maria Waligórska", email = "m.waligorska@student.uw.edu.pl"}
+]
+readme = "README.md"
+dependencies = [
+    "pandas >= 2.3.0"
+]
+dynamic = ["packages"]    
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["neurohearing*"]
+exclude = ["data*", "notebooks*"]

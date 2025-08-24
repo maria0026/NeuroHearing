@@ -1,0 +1,5 @@
+# DATA 
+datarawdirectory: data/raw/
+datainterimdirectory: data/interim/
+dataprocesseddirectory: data/processed/
+dataname: export_all_tables

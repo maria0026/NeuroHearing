@@ -3,3 +3,6 @@ datarawdirectory: data/raw/
 datainterimdirectory: data/interim/
 dataprocesseddirectory: data/processed/
 dataname: export_all_tables
+tonaldataname: audiometry_tonal
+verbaldataname: audiometry_verbal
+freefielddataname: audiometry_free_field

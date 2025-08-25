@@ -1,23 +1,7 @@
 import argparse
 from neurohearing.preprocess.preprocessing_core import FileProcessor
 from functools import reduce
-import pandas as pd
 import neurohearing.common.tools as tools
-
-def parse_list(arg_str):
-    """Konwertuje string 'a,b,c' na listę ['a','b','c']"""
-    return [x.strip() for x in arg_str.split(',')] if arg_str else []
-
-
-def parse_audiometry_map(map_str):
-    """
-    Konwertuje string 'Arkusz1=klucz1,Arkusz2=klucz2' na słownik
-    """
-    mapping = {}
-    for pair in map_str.split(','):
-        sheet, key = pair.split('=')
-        mapping[sheet.strip()] = key.strip()
-    return mapping
 
 
 def main(args):
@@ -25,10 +9,10 @@ def main(args):
     config = tools.load_config()
     audiometry_datapath = config["datarawdirectory"] + config["dataname"] + '.xlsx'
 
-    audiometry_types = parse_list(args.audiometry_types)
-    audiometry_map = parse_audiometry_map(args.audiometry_map) if args.audiometry_map else None
-    audiometry_dropcolumns = parse_list(args.audiometry_dropcolumns)
-    match_columns = parse_list(args.match_columns)
+    audiometry_types = tools.parse_list(args.audiometry_types)
+    audiometry_map = tools.parse_map(args.audiometry_map) if args.audiometry_map else None
+    audiometry_dropcolumns = tools.parse_list(args.audiometry_dropcolumns)
+    match_columns = tools.parse_list(args.match_columns)
 
     processor = FileProcessor(
         audiometry_datapath,

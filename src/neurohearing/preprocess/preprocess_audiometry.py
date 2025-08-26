@@ -9,5 +9,7 @@ def main():
     tonal_audiometry_processor = TonalAudiometry(tonal_audiometry_datapath)
     tonal_audiometry_processor.merge_mask()
 
+    tonal_audiometry_processor.calculate_pta()
+
 if __name__=="__main__":
     main()

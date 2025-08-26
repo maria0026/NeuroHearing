@@ -9,6 +9,7 @@ class TonalAudiometry():
         self.mask_merging_columns = mask_merging_columns
         self.date_column = date_column
         self.audiometry_type = audiometry_type
+        self.type_col = list(self.audiometry_type.keys())[0]
 
     def merge_mask(self):
 
@@ -20,35 +21,47 @@ class TonalAudiometry():
         )
 
         group_columns = self.mask_merging_columns + ['date_year_month_day']
-        type_col = list(self.audiometry_type.keys())[0]
 
-        pairs = [p for sublist in self.audiometry_type[type_col] for p in [sublist]]
+        pairs = [p for sublist in self.audiometry_type[self.type_col] for p in [sublist]]
 
         #mini_df for each patient and each ear
         mini_dfs = []
         for _, group in self.data.groupby(group_columns):
             mini_dfs.append(group.reset_index(drop=True))
 
-        for mini_df in mini_dfs:
+        for i, mini_df in enumerate(mini_dfs):
 
-            types = set(mini_df[type_col])
+            types = set(mini_df[self.type_col])
             for pair in pairs:
                 if set(pair) <= types:
-                    row_first = mini_df[mini_df[type_col] == pair[0]].iloc[0]
-                    row_second = mini_df[mini_df[type_col] == pair[1]].iloc[0]
+                    row_first = mini_df[mini_df[self.type_col] == pair[0]].iloc[0]
+                    row_second = mini_df[mini_df[self.type_col] == pair[1]].iloc[0]
                     merged_row = row_first.combine_first(row_second)
 
                     #update values with merged from masking and not masking
-                    idx_first = mini_df[mini_df[type_col] == pair[0]].index[0]
+                    idx_first = mini_df[mini_df[self.type_col] == pair[0]].index[0]
                     mini_df.loc[idx_first] = merged_row
                     #delete second row
-                    mini_df = mini_df[mini_df[type_col] != pair[1]]
+                    mini_df = mini_df[mini_df[self.type_col] != pair[1]]
 
             #filter vibro
-            mini_df = mini_df[~mini_df[type_col].str.contains("Vibro", na=False)]
-            mini_df = mini_df[~mini_df[type_col].str.contains("szumy", na=False)]
+            mini_df = mini_df[~mini_df[self.type_col].str.contains("Vibro", na=False)]
+            mini_df = mini_df[~mini_df[self.type_col].str.contains("szumy", na=False)]
+
+            mini_dfs[i] = mini_df
             #cols = mini_df.filter(like='WYNIK').columns
             #print(mini_df[list(cols) + ['UWAGI_DO_AUDIOMETRII_t', 'TYP_AUDIOMETRII_t']])
 
+        self.mini_dfs = mini_dfs
 
 
+    def calculate_pta(self):
+
+        for mini_df in self.mini_dfs:
+            if not mini_df[mini_df[self.type_col].isin(['Bone', 'BoneMask'])].empty:
+                idx = mini_df[mini_df[self.type_col].isin(['Bone', 'BoneMask'])].index
+                cols = mini_df.filter(like='WYNIK').columns
+                print(mini_df[list(cols) + ['UWAGI_DO_AUDIOMETRII_t', 'TYP_AUDIOMETRII_t']])
+                #print(mini_df)
+                print(idx)
+                #mini_df['PTA2'] = 

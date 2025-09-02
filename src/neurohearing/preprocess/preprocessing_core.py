@@ -30,7 +30,7 @@ class FileProcessor:
                     try:
                         df = self.f.parse(sheet, dtype={"PESEL": str})
                         #give different names for all columns except the matching ones and columns to drop
-                        df = df.rename(columns={col: f"{col}_{self.audiometry_map[sheet][0]}" for col in df.columns if col not in exclude_cols})
+                        df = df.rename(columns={col: f"{col}_{self.audiometry_map[sheet]}" for col in df.columns if col not in exclude_cols})
                         self.audiometries[self.audiometry_map[sheet]] = df
                         print(f'{self.audiometry_map[sheet]} audiometry reading completed')
                     except ValueError as e:
@@ -51,7 +51,7 @@ class FileProcessor:
             )
             self.audiometries[key] = df
             
-    def merge(self):
+    def merge_audiometries(self, audiometry_type_column):
         
         for key, df in self.audiometries.items():
             df_merged = pd.merge(
@@ -60,6 +60,12 @@ class FileProcessor:
             on=self.match_columns,
             how="left"
             )
-            df_merged = df_merged[~df_merged[f'NAZWA_AUDIOMETRII_{key[0]}'].isnull()]
+            col_name = f'{audiometry_type_column}_{key}'
+
+            if col_name in df_merged.columns:
+                df_merged = df_merged[~df_merged[col_name].isnull()]
+            else:
+                print(f"Warning: Column '{col_name}' not found in merged DataFrame for key '{key}'. No filtering applied.")
+
             self.audiometries[key] = df_merged
             df_merged.to_csv(f'{self.output_path}/audiometry_{key}.csv')

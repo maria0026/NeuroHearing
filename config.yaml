@@ -3,6 +3,47 @@ datarawdirectory: data/raw/
 datainterimdirectory: data/interim/
 dataprocesseddirectory: data/processed/
 dataname: export_all_tables
+
+# Names of Excel sheets containing audiometry data
+audiometry_types:
+  - "Audiometria_Tonalna"
+  - "Audiometria_Slowna"
+  - "Audiometria_Pole_Swobodne"
+
+# Mapping of sheet names to short keys used in the code
+audiometry_map:
+  Audiometria_Tonalna: "tonal"
+  Audiometria_Slowna: "verbal"
+  Audiometria_Pole_Swobodne: "free_field"
+
+# Columns to be dropped when reading audiometry data
+audiometry_dropcolumns:
+  - "WYNIKI_POZOSTALE"
+  - "WYKONUJACY_BADANIE"
+  - "OPIS_BADANIA"
+  - "id"
+
+# Columns used for matching patient data; these will not be renamed
+match_columns:
+  - "PESEL"
+  - "NUMER_W_JEDNOSTCE"
+  - "NUMER_HISTORII_CHOROBY"
+
+datecolumn: DATA_BADANIA
+
 tonaldataname: audiometry_tonal
 verbaldataname: audiometry_verbal
 freefielddataname: audiometry_free_field
+
+audiometrytypecolumnname: "NAZWA_AUDIOMETRII"
+
+pta_columns:
+  PTA2:
+    - WYNIK_X_500_t
+    - WYNIK_X_1000_t
+    - WYNIK_X_2000_t
+  PTA4:
+    - WYNIK_X_500_t
+    - WYNIK_X_1000_t
+    - WYNIK_X_2000_t
+    - WYNIK_X_4000_t

@@ -22,13 +22,13 @@ class FileProcessor:
         self.audiometries = {}
 
         
-    def read_audiometry(self):
+    def read_audiometry(self, pesel_column):
         exclude_cols = self.match_columns + self.audiometry_dropcolumns
         for sheet in self.f.sheet_names:
             for audiometry_type in self.audiometry_types:
                 if sheet == audiometry_type:
                     try:
-                        df = self.f.parse(sheet, dtype={"PESEL": str})
+                        df = self.f.parse(sheet, dtype={pesel_column: str})
                         #give different names for all columns except the matching ones and columns to drop
                         df = df.rename(columns={col: f"{col}_{self.audiometry_map[sheet]}" for col in df.columns if col not in exclude_cols})
                         self.audiometries[self.audiometry_map[sheet]] = df
@@ -37,21 +37,21 @@ class FileProcessor:
                         print(f"Nie udało się wczytać arkusza '{sheet}': {e}")
 
 
-    def read_patients(self):
+    def read_patients(self, patients_sheetname, pesel_column):
         for sheet in self.f.sheet_names:
-            if sheet == 'Pacjenci':
-                self.df_patients = self.f.parse(sheet, dtype={"PESEL": str})
+            if sheet == patients_sheetname:
+                self.df_patients = self.f.parse(sheet, dtype={pesel_column: str})
 
 
-    def filter_audiometry(self):
+    def filter_audiometry(self, description_columnname):
         for key, df in self.audiometries.items():
-            df = df[df["OPIS_BADANIA"].isnull()]
+            df = df[df[description_columnname].isnull()]
             df = df.drop(
                 columns=self.audiometry_dropcolumns
             )
             self.audiometries[key] = df
             
-    def merge_audiometries(self, audiometry_type_column):
+    def merge_audiometries(self, audiometry_type_columnname):
         
         for key, df in self.audiometries.items():
             df_merged = pd.merge(
@@ -60,7 +60,7 @@ class FileProcessor:
             on=self.match_columns,
             how="left"
             )
-            col_name = f'{audiometry_type_column}_{key}'
+            col_name = f'{audiometry_type_columnname}_{key}'
 
             if col_name in df_merged.columns:
                 df_merged = df_merged[~df_merged[col_name].isnull()]

@@ -1,6 +1,5 @@
 import argparse
 from neurohearing.preprocess.preprocessing_core import FileProcessor
-from functools import reduce
 import neurohearing.common.tools as tools
 
 
@@ -22,15 +21,15 @@ def main(args):
         match_columns = match_columns,
         output_path=config["datainterimdirectory"])
     
-    processor.read_audiometry()
-    processor.read_patients()
+    processor.read_audiometry(config["pesel_columnname"])
+    processor.read_patients(config["patients_sheetname"], config["pesel_columnname"])
     print("Reading completed")
 
-    processor.filter_audiometry()
+    processor.filter_audiometry(config["description_column"])
     print("Filtering completed")
     print(processor.audiometries)
 
-    processor.merge_audiometries(audiometry_type_column=config["audiometrytypecolumnname"])
+    processor.merge_audiometries(config["audiometry_type_columnname"])
     print("Merging completed")
     print(processor.audiometries)
 

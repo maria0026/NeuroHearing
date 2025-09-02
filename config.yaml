@@ -4,6 +4,8 @@ datainterimdirectory: data/interim/
 dataprocesseddirectory: data/processed/
 dataname: export_all_tables
 
+patients_sheetname: "Pacjenci"
+
 # Names of Excel sheets containing audiometry data
 audiometry_types:
   - "Audiometria_Tonalna"
@@ -29,13 +31,14 @@ match_columns:
   - "NUMER_W_JEDNOSTCE"
   - "NUMER_HISTORII_CHOROBY"
 
-datecolumn: DATA_BADANIA
+date_column: "DATA_BADANIA"
+description_column: "OPIS_BADANIA"
+audiometry_type_columnname: "NAZWA_AUDIOMETRII"
+pesel_columnname: "PESEL"
 
 tonaldataname: audiometry_tonal
 verbaldataname: audiometry_verbal
 freefielddataname: audiometry_free_field
-
-audiometrytypecolumnname: "NAZWA_AUDIOMETRII"
 
 pta_columns:
   PTA2:

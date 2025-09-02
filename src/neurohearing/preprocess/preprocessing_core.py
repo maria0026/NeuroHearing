@@ -7,17 +7,13 @@ class FileProcessor:
                                    'Audiometria_Slowna': 'verbal',
                                    'Audiometria_Pole_Swobodne': 'free_field'},
                 audiometry_dropcolumns = ["WYNIKI_POZOSTALE", "WYKONUJACY_BADANIE", "OPIS_BADANIA", "id"],
-                match_columns = ["PESEL", "NUMER_W_JEDNOSTCE", "NUMER_HISTORII_CHOROBY"],
-                output_path="data/interim"):
+                match_columns = ["PESEL", "NUMER_W_JEDNOSTCE", "NUMER_HISTORII_CHOROBY"]):
         
         self.f = pd.ExcelFile(path, engine='openpyxl')
         self.audiometry_types = audiometry_types
         self.audiometry_map = audiometry_map
         self.audiometry_dropcolumns = audiometry_dropcolumns
         self.match_columns = match_columns
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
-        self.output_path = output_path
         
         self.audiometries = {}
 
@@ -51,7 +47,7 @@ class FileProcessor:
             )
             self.audiometries[key] = df
             
-    def merge_audiometries(self, audiometry_type_columnname):
+    def merge_audiometries(self, audiometry_type_columnname, output_path):
         
         for key, df in self.audiometries.items():
             df_merged = pd.merge(
@@ -68,4 +64,6 @@ class FileProcessor:
                 print(f"Warning: Column '{col_name}' not found in merged DataFrame for key '{key}'. No filtering applied.")
 
             self.audiometries[key] = df_merged
-            df_merged.to_csv(f'{self.output_path}/audiometry_{key}.csv')
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
+            df_merged.to_csv(f'{output_path}/audiometry_{key}.csv')

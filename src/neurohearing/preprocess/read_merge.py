@@ -29,7 +29,7 @@ def main(args):
     print("Filtering completed")
     print(processor.audiometries)
 
-    processor.merge_audiometries(config["audiometry_type_columnname"])
+    processor.merge_audiometries(config["audiometry_type_columnname"], config["datainterimdirectory"])
     print("Merging completed")
     print(processor.audiometries)
 

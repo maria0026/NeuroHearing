@@ -1,18 +1,23 @@
 import pandas as pd
+import os
 
 class TonalAudiometry():
-    def __init__(self, path, mask_merging_columns=["PESEL", "UWAGI_DO_AUDIOMETRII_t"],
-                 date_column="DATA_BADANIA_t",
-                 audiometry_type={"TYP_AUDIOMETRII_t": [["Bone", "BoneMask"], ["Air", "AirMask"]]}):
+    def __init__(self, path, 
+                  tonal_suffix,
+                  pesel_columnname,
+                  mask_merging_columns=["PESEL", "UWAGI_DO_AUDIOMETRII_tonal"],
+                  date_column="DATA_BADANIA",
+                  type_column="TYP_AUDIOMETRII",
+                  audiometry_pairs=[["BoneMask", "Bone"], ["AirMask", "Air"]]):
         
-        self.data = pd.read_csv(path, sep=None, engine='python', dtype={"PESEL": str})
+        self.data = pd.read_csv(path, sep=None, engine='python', dtype={pesel_columnname: str})
+        self.tonal_suffix = tonal_suffix
         self.mask_merging_columns = mask_merging_columns
-        self.date_column = date_column
-        self.audiometry_type = audiometry_type
-        self.type_col = list(self.audiometry_type.keys())[0]
+        self.date_column = date_column + '_' + tonal_suffix
+        self.type_col = type_column + '_' + tonal_suffix
+        self.audiometry_pairs = audiometry_pairs
 
-    def merge_mask(self):
-
+    def patients_dfs(self):
         self.data[self.date_column] = pd.to_datetime(self.data[self.date_column])
         self.data['date_year_month_day'] = (
             self.data[self.date_column].dt.year.astype(str) + "-" +
@@ -22,14 +27,16 @@ class TonalAudiometry():
 
         group_columns = self.mask_merging_columns + ['date_year_month_day']
 
-        pairs = [p for sublist in self.audiometry_type[self.type_col] for p in [sublist]]
-
         #mini_df for each patient and each ear
-        mini_dfs = []
+        self.mini_dfs = []
         for _, group in self.data.groupby(group_columns):
-            mini_dfs.append(group.reset_index(drop=True))
+            self.mini_dfs.append(group.reset_index(drop=True))
 
-        for i, mini_df in enumerate(mini_dfs):
+
+    def merge_mask(self):
+        pairs = [p for sublist in self.audiometry_pairs for p in [sublist]]
+
+        for i, mini_df in enumerate(self.mini_dfs):
 
             types = set(mini_df[self.type_col])
             for pair in pairs:
@@ -48,20 +55,24 @@ class TonalAudiometry():
             mini_df = mini_df[~mini_df[self.type_col].str.contains("Vibro", na=False)]
             mini_df = mini_df[~mini_df[self.type_col].str.contains("szumy", na=False)]
 
-            mini_dfs[i] = mini_df
+            self.mini_dfs[i] = mini_df
             #cols = mini_df.filter(like='WYNIK').columns
             #print(mini_df[list(cols) + ['UWAGI_DO_AUDIOMETRII_t', 'TYP_AUDIOMETRII_t']])
 
-        self.mini_dfs = mini_dfs
+
+    def calculate_pta(self, PTA2_columns, PTA4_columns):
+
+        PTA2_columns = [col + "_" + self.tonal_suffix for col in PTA2_columns]
+        PTA4_columns = [col + "_" + self.tonal_suffix for col in PTA4_columns]
+
+        for i, mini_df in enumerate(self.mini_dfs):
+            mini_df['PTA2'] = mini_df[PTA2_columns].mean(axis=1)
+            mini_df['PTA4'] = mini_df[PTA4_columns].mean(axis=1)
+            self.mini_dfs[i] = mini_df
 
 
-    def calculate_pta(self):
-
-        for mini_df in self.mini_dfs:
-            if not mini_df[mini_df[self.type_col].isin(['Bone', 'BoneMask'])].empty:
-                idx = mini_df[mini_df[self.type_col].isin(['Bone', 'BoneMask'])].index
-                cols = mini_df.filter(like='WYNIK').columns
-                print(mini_df[list(cols) + ['UWAGI_DO_AUDIOMETRII_t', 'TYP_AUDIOMETRII_t']])
-                #print(mini_df)
-                print(idx)
-                #mini_df['PTA2'] = 
+    def save_processed_df(self, output_path):
+        merged_df = pd.concat(self.mini_dfs, ignore_index=True)
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        merged_df.to_csv(f'{output_path}/audiometry_{self.tonal_suffix}.csv', index=False)

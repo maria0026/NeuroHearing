@@ -18,8 +18,7 @@ def main(args):
         audiometry_types=audiometry_types,
         audiometry_map=audiometry_map,
         audiometry_dropcolumns=audiometry_dropcolumns,
-        match_columns = match_columns,
-        output_path=config["datainterimdirectory"])
+        match_columns = match_columns)
     
     processor.read_audiometry(config["pesel_columnname"])
     processor.read_patients(config["patients_sheetname"], config["pesel_columnname"])

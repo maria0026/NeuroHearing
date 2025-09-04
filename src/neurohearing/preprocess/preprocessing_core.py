@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 class FileProcessor:
-    def __init__(self, path, audiometry_types=['Audiometria_Tonalna', 'Audiometria_Slowna', 'Audiometria_Pole_Swobodne'], 
+    def __init__(self, path, audiometry_names=['Audiometria_Tonalna', 'Audiometria_Slowna', 'Audiometria_Pole_Swobodne'], 
                 audiometry_map = {'Audiometria_Tonalna': 'tonal',
                                    'Audiometria_Slowna': 'verbal',
                                    'Audiometria_Pole_Swobodne': 'free_field'},
@@ -10,7 +10,7 @@ class FileProcessor:
                 match_columns = ["PESEL", "NUMER_W_JEDNOSTCE", "NUMER_HISTORII_CHOROBY"]):
         
         self.f = pd.ExcelFile(path, engine='openpyxl')
-        self.audiometry_types = audiometry_types
+        self.audiometry_names = audiometry_names
         self.audiometry_map = audiometry_map
         self.audiometry_dropcolumns = audiometry_dropcolumns
         self.match_columns = match_columns
@@ -21,7 +21,7 @@ class FileProcessor:
     def read_audiometry(self, pesel_column):
         exclude_cols = self.match_columns + self.audiometry_dropcolumns
         for sheet in self.f.sheet_names:
-            for audiometry_type in self.audiometry_types:
+            for audiometry_type in self.audiometry_names:
                 if sheet == audiometry_type:
                     try:
                         df = self.f.parse(sheet, dtype={pesel_column: str})

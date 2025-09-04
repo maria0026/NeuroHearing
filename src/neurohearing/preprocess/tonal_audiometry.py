@@ -2,19 +2,25 @@ import pandas as pd
 import os
 
 class TonalAudiometry():
-    def __init__(self, path, 
+    def __init__(self, 
+                  path, 
                   tonal_suffix,
-                  pesel_columnname,
-                  mask_merging_columns=["PESEL", "UWAGI_DO_AUDIOMETRII_tonal"],
-                  date_column="DATA_BADANIA",
-                  type_column="TYP_AUDIOMETRII",
+                  match_columnnames, 
+                  columnnames,
                   audiometry_pairs=[["BoneMask", "Bone"], ["AirMask", "Air"]]):
         
+        for key, value in columnnames.items():
+            if value not in match_columnnames:
+                columnnames[key] = value + '_' + tonal_suffix
+
+        pesel_columnname = columnnames['pesel_columnname']
         self.data = pd.read_csv(path, sep=None, engine='python', dtype={pesel_columnname: str})
+
+        self.mask_merging_columns = [columnnames['pesel_columnname'], columnnames['audiometry_earside_columnname']]
+        self.date_column = columnnames['date_column']
+        self.type_col = columnnames['type_column']
+
         self.tonal_suffix = tonal_suffix
-        self.mask_merging_columns = mask_merging_columns
-        self.date_column = date_column + '_' + tonal_suffix
-        self.type_col = type_column + '_' + tonal_suffix
         self.audiometry_pairs = audiometry_pairs
 
     def patients_dfs(self):

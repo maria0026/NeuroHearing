@@ -32,6 +32,8 @@ class TonalAudiometry():
         for _, group in self.data.groupby(group_columns):
             self.mini_dfs.append(group.reset_index(drop=True))
 
+        print(f'Created {len(self.mini_dfs)} dataframes for each patient and each ear.')
+
 
     def merge_mask(self):
         pairs = [p for sublist in self.audiometry_pairs for p in [sublist]]
@@ -57,22 +59,29 @@ class TonalAudiometry():
 
             self.mini_dfs[i] = mini_df
             #cols = mini_df.filter(like='WYNIK').columns
-            #print(mini_df[list(cols) + ['UWAGI_DO_AUDIOMETRII_t', 'TYP_AUDIOMETRII_t']])
+            #print(mini_df[list(cols) + ['UWAGI_DO_AUDIOMETRII_tonal', 'TYP_AUDIOMETRII_tonal']])
+
+        print(f'Merging rows completed.')
 
 
-    def calculate_pta(self, PTA2_columns, PTA4_columns):
+    def calculate_pta(self, PTA2_columns, PTA4_columns, hf_columns):
 
         PTA2_columns = [col + "_" + self.tonal_suffix for col in PTA2_columns]
         PTA4_columns = [col + "_" + self.tonal_suffix for col in PTA4_columns]
+        hf_columns = [col + "_" + self.tonal_suffix for col in hf_columns]
 
         for i, mini_df in enumerate(self.mini_dfs):
             mini_df['PTA2'] = mini_df[PTA2_columns].mean(axis=1)
             mini_df['PTA4'] = mini_df[PTA4_columns].mean(axis=1)
+            mini_df['fhPTA'] = mini_df[hf_columns].mean(axis=1)
             self.mini_dfs[i] = mini_df
+        
+        print('PTA calculation completed.')
 
 
     def save_processed_df(self, output_path):
         merged_df = pd.concat(self.mini_dfs, ignore_index=True)
         if not os.path.exists(output_path):
             os.makedirs(output_path)
-        merged_df.to_csv(f'{output_path}/audiometry_{self.tonal_suffix}.csv', index=False)
+        merged_df.to_csv(f'{output_path}audiometry_{self.tonal_suffix}.csv', index=False)
+        print(f'Saving to {output_path}audiometry_{self.tonal_suffix}.csv completed.')

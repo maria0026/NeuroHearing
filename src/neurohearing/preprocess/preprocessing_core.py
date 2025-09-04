@@ -30,13 +30,14 @@ class FileProcessor:
                         self.audiometries[self.audiometry_map[sheet]] = df
                         print(f'{self.audiometry_map[sheet]} audiometry reading completed')
                     except ValueError as e:
-                        print(f"Nie udało się wczytać arkusza '{sheet}': {e}")
+                        print(f"Problem with reading '{sheet}': {e}")
 
 
     def read_patients(self, patients_sheetname, pesel_column):
         for sheet in self.f.sheet_names:
             if sheet == patients_sheetname:
                 self.df_patients = self.f.parse(sheet, dtype={pesel_column: str})
+        print('Patient sheet reading completed.')        
 
 
     def filter_audiometry(self, description_columnname):
@@ -46,6 +47,7 @@ class FileProcessor:
                 columns=self.audiometry_dropcolumns
             )
             self.audiometries[key] = df
+        print('Filtering audiometry completed.')
             
     def merge_audiometries(self, audiometry_type_columnname, output_path):
         
@@ -60,10 +62,13 @@ class FileProcessor:
 
             if col_name in df_merged.columns:
                 df_merged = df_merged[~df_merged[col_name].isnull()]
+                print(f'Dataframe for {key} audiometry merged and ready to save.')
             else:
                 print(f"Warning: Column '{col_name}' not found in merged DataFrame for key '{key}'. No filtering applied.")
 
             self.audiometries[key] = df_merged
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
-            df_merged.to_csv(f'{output_path}/audiometry_{key}.csv')
+            df_merged.to_csv(f'{output_path}audiometry_{key}.csv')
+            print(f'Saving to {output_path}audiometry_{key}.csv completed.')
+

@@ -7,7 +7,7 @@ dataname: export_all_tables
 patients_sheetname: "Pacjenci"
 
 # Names of Excel sheets containing audiometry data
-audiometry_types:
+audiometry_names:
   - "Audiometria_Tonalna"
   - "Audiometria_Slowna"
   - "Audiometria_Pole_Swobodne"
@@ -33,8 +33,14 @@ match_columns:
 
 date_column: "DATA_BADANIA"
 description_column: "OPIS_BADANIA"
-audiometry_type_columnname: "NAZWA_AUDIOMETRII"
+audiometry_name_columnname: "NAZWA_AUDIOMETRII"
+audiometry_earside_columnname: "UWAGI_DO_AUDIOMETRII"
+audiometry_type_columnname: "TYP_AUDIOMETRII"
 pesel_columnname: "PESEL"
+
+mask_merging_columns:
+  - "PESEL"
+  - "UWAGI_DO_AUDIOMETRII_tonal"
 
 tonaldataname: audiometry_tonal
 verbaldataname: audiometry_verbal

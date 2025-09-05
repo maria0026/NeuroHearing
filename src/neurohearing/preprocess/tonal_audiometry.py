@@ -94,6 +94,9 @@ class TonalAudiometry():
         merged_df.to_csv(f'{output_path}audiometry_{self.tonal_suffix}.csv', index=False)
         print(f'Saving to {output_path}audiometry_{self.tonal_suffix}.csv completed.')
 
+    def get_min_row(self, df, column):
+        row = df.nsmallest(1, column)
+        return row.iloc[0] if not row.empty else None
 
     def select_better_air_pta(self):
 
@@ -109,17 +112,8 @@ class TonalAudiometry():
             air['ear_side'] = air[self.earside_col].str.extract(r"(lewego|prawego)")
             air['ear_side'] = air['ear_side'].map({"lewego": "L", "prawego": "P"})
 
-            row_min_pta2 = air.nsmallest(1, 'PTA2')
-            if not row_min_pta2.empty:
-                row_min_pta2 = row_min_pta2.iloc[0]
-            else:
-                row_min_pta2 = None 
-
-            row_min_hfPTA = air.nsmallest(1, 'hfPTA')
-            if not row_min_hfPTA.empty:
-                row_min_hfPTA = row_min_hfPTA.iloc[0]
-            else:
-                row_min_hfPTA = None
+            row_min_pta2 = self.get_min_row(air, 'PTA2')
+            row_min_hfPTA = self.get_min_row(air, 'hfPTA')
 
             rows.append({
                 self.pesel_columnname: str(group[self.pesel_columnname].values[0]),

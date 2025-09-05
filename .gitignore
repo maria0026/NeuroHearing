@@ -7,3 +7,4 @@
 *.txt
 src/neurohearing.egg-info/PKG-INFO
 build
+/neurohearing.egg-info

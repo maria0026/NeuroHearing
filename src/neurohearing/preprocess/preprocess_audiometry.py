@@ -1,4 +1,3 @@
-import argparse
 from neurohearing.preprocess.tonal_audiometry import TonalAudiometry
 import neurohearing.common.tools as tools
 
@@ -17,7 +16,8 @@ def main():
                                                                 'date_column': config['date_column'],
                                                                 'type_column': config['audiometry_type_columnname']
                                                                },
-                                                 audiometry_pairs=[["BoneMask", "Bone"], ["AirMask", "Air"]]
+                                                 air_audiometry=config['air_audiometry'],
+                                                 bone_audiometry=config['bone_audiometry']
                                                  )
     tonal_audiometry_processor.patients_dfs()
     tonal_audiometry_processor.merge_mask()
@@ -25,9 +25,12 @@ def main():
     PTA2_columns = config["pta_columns"]["PTA2"]
     PTA4_columns = config["pta_columns"]["PTA4"]
     hfPTA_columns = config["pta_columns"]["hfPTA"]
-    
+
     tonal_audiometry_processor.calculate_pta(PTA2_columns, PTA4_columns, hfPTA_columns)
     tonal_audiometry_processor.save_processed_df(config["dataprocesseddirectory"])
+
+    tonal_audiometry_processor.select_better_air_pta()
+    tonal_audiometry_processor.save_processed_to_mri_df(config["dataprocesseddirectory"])
 
 if __name__=="__main__":
     main()

@@ -31,6 +31,10 @@ match_columns:
   - "NUMER_W_JEDNOSTCE"
   - "NUMER_HISTORII_CHOROBY"
 
+tonaldataname: audiometry_tonal
+verbaldataname: audiometry_verbal
+freefielddataname: audiometry_free_field
+
 date_column: "DATA_BADANIA"
 description_column: "OPIS_BADANIA"
 audiometry_name_columnname: "NAZWA_AUDIOMETRII"
@@ -40,11 +44,13 @@ pesel_columnname: "PESEL"
 
 mask_merging_columns:
   - "PESEL"
-  - "UWAGI_DO_AUDIOMETRII_tonal"
+  - "UWAGI_DO_AUDIOMETRII"
 
-tonaldataname: audiometry_tonal
-verbaldataname: audiometry_verbal
-freefielddataname: audiometry_free_field
+bone_audiometry:
+  - ["BoneMask", "Bone"]
+
+air_audiometry:
+  - ["AirMask", "Air"]
 
 pta_columns:
   PTA2:

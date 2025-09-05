@@ -7,21 +7,23 @@ class TonalAudiometry():
                   tonal_suffix,
                   match_columnnames, 
                   columnnames,
-                  audiometry_pairs=[["BoneMask", "Bone"], ["AirMask", "Air"]]):
+                  air_audiometry=["AirMask", "Air"],
+                  bone_audiometry=["BoneMask", "Bone"]):
         
         for key, value in columnnames.items():
             if value not in match_columnnames:
                 columnnames[key] = value + '_' + tonal_suffix
 
-        pesel_columnname = columnnames['pesel_columnname']
-        self.data = pd.read_csv(path, sep=None, engine='python', dtype={pesel_columnname: str})
+        self.pesel_columnname = columnnames['pesel_columnname']
+        self.data = pd.read_csv(path, sep=None, engine='python', dtype={self.pesel_columnname: str})
 
-        self.mask_merging_columns = [columnnames['pesel_columnname'], columnnames['audiometry_earside_columnname']]
+        self.earside_col = columnnames['audiometry_earside_columnname']
         self.date_column = columnnames['date_column']
         self.type_col = columnnames['type_column']
 
         self.tonal_suffix = tonal_suffix
-        self.audiometry_pairs = audiometry_pairs
+        self.air_audiometry = air_audiometry
+        self.bone_audiometry = bone_audiometry
 
     def patients_dfs(self):
         self.data[self.date_column] = pd.to_datetime(self.data[self.date_column])
@@ -31,18 +33,18 @@ class TonalAudiometry():
             self.data[self.date_column].dt.day.astype(str)
         )
 
-        group_columns = self.mask_merging_columns + ['date_year_month_day']
+        self.group_columns = [self.pesel_columnname, self.earside_col] + ['date_year_month_day']
 
         #mini_df for each patient and each ear
         self.mini_dfs = []
-        for _, group in self.data.groupby(group_columns):
+        for _, group in self.data.groupby(self.group_columns):
             self.mini_dfs.append(group.reset_index(drop=True))
 
         print(f'Created {len(self.mini_dfs)} dataframes for each patient and each ear.')
 
 
     def merge_mask(self):
-        pairs = [p for sublist in self.audiometry_pairs for p in [sublist]]
+        pairs = self.air_audiometry + self.bone_audiometry
 
         for i, mini_df in enumerate(self.mini_dfs):
 
@@ -78,12 +80,12 @@ class TonalAudiometry():
 
         for i, mini_df in enumerate(self.mini_dfs):
             mini_df['PTA2'] = mini_df[PTA2_columns].mean(axis=1)
-            mini_df['PTA4'] = mini_df[PTA4_columns].mean(axis=1)
-            mini_df['fhPTA'] = mini_df[hf_columns].mean(axis=1)
+            #mini_df['PTA4'] = mini_df[PTA4_columns].mean(axis=1)
+            mini_df['hfPTA'] = mini_df[hf_columns].mean(axis=1)
             self.mini_dfs[i] = mini_df
         
         print('PTA calculation completed.')
-
+    
 
     def save_processed_df(self, output_path):
         merged_df = pd.concat(self.mini_dfs, ignore_index=True)
@@ -91,3 +93,48 @@ class TonalAudiometry():
             os.makedirs(output_path)
         merged_df.to_csv(f'{output_path}audiometry_{self.tonal_suffix}.csv', index=False)
         print(f'Saving to {output_path}audiometry_{self.tonal_suffix}.csv completed.')
+
+
+    def select_better_air_pta(self):
+
+        #column names for grouping
+        two_ear_group_columns = self.group_columns.copy()
+        two_ear_group_columns.remove(self.earside_col)
+
+        merged_df = pd.concat(self.mini_dfs, ignore_index=True)
+        rows = []
+        
+        for _, group in merged_df.groupby(two_ear_group_columns):
+            air = group[group[self.type_col].isin(self.air_audiometry)].copy()
+            air['ear_side'] = air[self.earside_col].str.extract(r"(lewego|prawego)")
+            air['ear_side'] = air['ear_side'].map({"lewego": "L", "prawego": "P"})
+
+            row_min_pta2 = air.nsmallest(1, 'PTA2')
+            if not row_min_pta2.empty:
+                row_min_pta2 = row_min_pta2.iloc[0]
+            else:
+                row_min_pta2 = None 
+
+            row_min_hfPTA = air.nsmallest(1, 'hfPTA')
+            if not row_min_hfPTA.empty:
+                row_min_hfPTA = row_min_hfPTA.iloc[0]
+            else:
+                row_min_hfPTA = None
+
+            rows.append({
+                self.pesel_columnname: str(group[self.pesel_columnname].values[0]),
+                'PTA2': row_min_pta2['PTA2'] if row_min_pta2 is not None else None,
+                'earside_PTA2': row_min_pta2['ear_side'] if row_min_pta2 is not None else None,
+                'hfPTA': row_min_hfPTA['hfPTA'] if row_min_hfPTA is not None else None,
+                'earside_hfPTA': row_min_hfPTA['ear_side'] if row_min_hfPTA is not None else None,
+                self.date_column: group['date_year_month_day'].values[0]
+            })
+        self.final_mri_df = pd.DataFrame(rows)
+        #print(final_df)
+
+    def save_processed_to_mri_df(self, output_path):
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        self.final_mri_df.to_csv(f'{output_path}audiometry_{self.tonal_suffix}_mri.csv', index=False)
+        print(f'Saving to {output_path}audiometry_{self.tonal_suffix}_mri.csv completed.')
+

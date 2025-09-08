@@ -3,6 +3,8 @@ datarawdirectory: data/raw/
 datainterimdirectory: data/interim/
 dataprocesseddirectory: data/processed/
 dataname: export_all_tables
+mri_dataname: MRI
+mapping: anon_mapping
 
 patients_sheetname: "Pacjenci"
 

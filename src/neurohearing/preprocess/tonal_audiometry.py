@@ -108,7 +108,7 @@ class TonalAudiometry():
         rows = []
         
         for _, group in merged_df.groupby(two_ear_group_columns):
-            air = group[group[self.type_col].isin(self.air_audiometry)].copy()
+            air = group[group[self.type_col].isin(*(self.air_audiometry))].copy()
             air['ear_side'] = air[self.earside_col].str.extract(r"(lewego|prawego)")
             air['ear_side'] = air['ear_side'].map({"lewego": "L", "prawego": "P"})
 

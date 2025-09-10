@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-class FileProcessor:
+class ExcelProcessor:
     def __init__(self, path, audiometry_names=['Audiometria_Tonalna', 'Audiometria_Slowna', 'Audiometria_Pole_Swobodne'], 
                 audiometry_map = {'Audiometria_Tonalna': 'tonal',
                                    'Audiometria_Slowna': 'verbal',

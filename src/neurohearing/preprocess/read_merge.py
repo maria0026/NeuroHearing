@@ -1,5 +1,5 @@
 import argparse
-from neurohearing.preprocess.preprocessing_core import FileProcessor
+from neurohearing.preprocess.preprocessing_core import ExcelProcessor
 import neurohearing.common.tools as tools
 
 
@@ -13,7 +13,7 @@ def main(args):
     audiometry_dropcolumns = tools.parse_list(args.audiometry_dropcolumns) if args.audiometry_dropcolumns else config["audiometry_dropcolumns"]
     match_columns = tools.parse_list(args.match_columns) if args.match_columns else config["match_columns"]
 
-    processor = FileProcessor(
+    processor = ExcelProcessor(
         audiometry_datapath,
         audiometry_names=audiometry_names,
         audiometry_map=audiometry_map,

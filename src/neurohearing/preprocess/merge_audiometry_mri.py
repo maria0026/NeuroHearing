@@ -1,6 +1,6 @@
-import pandas as pd
 import neurohearing.common.tools as tools
-from neurohearing.preprocess.mri_morphometrics import MRI_morphometics
+from neurohearing.preprocess.objects.mri_morphometrics import MRI_morphometics
+import pandas as pd
 import argparse
 
 def main(args):

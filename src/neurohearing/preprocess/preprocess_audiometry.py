@@ -1,4 +1,4 @@
-from neurohearing.preprocess.tonal_audiometry import TonalAudiometry
+from neurohearing.preprocess.objects.tonal_audiometry import TonalAudiometry
 import neurohearing.common.tools as tools
 
 def main():
@@ -31,6 +31,7 @@ def main():
 
     tonal_audiometry_processor.select_better_air_pta()
     tonal_audiometry_processor.save_processed_to_mri_df(config["dataprocesseddirectory"])
+
 
 if __name__=="__main__":
     main()

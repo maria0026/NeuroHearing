@@ -1,4 +1,5 @@
 import yaml
+import pandas as pd
 
 def load_config():
     # Read in the configuration file
@@ -20,3 +21,8 @@ def parse_map(map_str):
         sheet, key = pair.split('=')
         mapping[sheet.strip()] = key.strip()
     return mapping
+
+def convert_to_datetime(df, column, suffix):
+    col = f"{column}_{suffix}"
+    df[col] = pd.to_datetime(df[col], errors="coerce")
+    return df

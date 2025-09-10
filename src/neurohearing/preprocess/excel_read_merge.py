@@ -1,5 +1,5 @@
 import argparse
-from neurohearing.preprocess.preprocessing_core import ExcelProcessor
+from neurohearing.preprocess.objects.preprocessing_core import ExcelProcessor
 import neurohearing.common.tools as tools
 
 

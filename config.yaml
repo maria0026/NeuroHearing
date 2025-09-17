@@ -5,6 +5,7 @@ dataprocesseddirectory: data/processed/
 dataname: export_all_tables
 mri_dataname: mri
 mapping: anon_mapping
+resultsdirectory: results/
 
 patients_sheetname: "Pacjenci"
 

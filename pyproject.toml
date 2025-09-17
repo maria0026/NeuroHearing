@@ -11,10 +11,13 @@ authors = [
 ]
 readme = "README.md"
 dependencies = [
-    "pandas >= 2.3.0"
+    "pandas >= 2.3.0",
+    "scikit-learn",
+    "statsmodels",
+    "tqdm"
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["neurohearing*"]
+include = ["neurohearing*", "brain_age*"]
 exclude = ["data*", "notebooks*"]

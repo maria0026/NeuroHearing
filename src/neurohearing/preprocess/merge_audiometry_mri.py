@@ -2,6 +2,7 @@ import neurohearing.common.tools as tools
 from neurohearing.preprocess.objects.mri_morphometrics import MRI_morphometics
 import pandas as pd
 import argparse
+import os
 
 def main(args):
     config = tools.load_config()
@@ -19,6 +20,14 @@ def main(args):
     
     mapping_datapath = config["datarawdirectory"] + config["mapping"] + '.csv'
     mri_morpohometrics.map_pesel(mapping_datapath)
+    mri_morpohometrics.filter_age(args.label_name)
+    mri_morpohometrics.filter_zeros(args.zeros_filtering_threshold)
+    
+    removed_ids_output_path = config["resultsdirectory"] + args.mri_removed_identifiers + '.csv'
+    if not os.path.exists(config["resultsdirectory"]):
+        os.makedirs(config["resultsdirectory"])
+
+    mri_morpohometrics.filter_outliers(n_std=6, removed_ids_output_path=removed_ids_output_path)
 
     mri_morpohometrics.merge_with_audiometry(data_audiometry)
     mri_morpohometrics.choose_closest_examinations(tonal_suffix)
@@ -34,6 +43,19 @@ if __name__=="__main__":
     parser.add_argument("--mri_audiometry_merged_filename", 
                         nargs="?", 
                         default="audiometry_tonal_mri_merged",
-                        help="Comma-separated list of audiometry sheet names")
+                        help="Filename for audiometry mri merged")
+    parser.add_argument("--label_name",
+                        nargs="?",
+                        default="age",
+                        help="Predicted parameters, list", 
+                        type=str)
+    parser.add_argument("--zeros_filtering_threshold",
+                        nargs="?",
+                        default=0.2,
+                        help="If column has zeros number larger than this threshold it will be deleted")
+    parser.add_argument("--mri_removed_identifiers", 
+                        nargs="?", 
+                        default="removed_identifiers",
+                        help="Filename for audiometry mri merged")
     args = parser.parse_args()
     main(args)

@@ -12,23 +12,26 @@ from scipy import stats
 
 def calculate_trends(df, column, X_feature_name):
 
-    X = df[X_feature_name].values
-    huber = HuberRegressor()
-    degree = 2
-    model = make_pipeline(PolynomialFeatures(degree), huber)
-    
+    X = df[[X_feature_name]].values
     y = df[column].values
-    model.fit(X, y)
 
-    coefficients = huber.coef_
-    intercept = huber.intercept_
+    if len(df) < 0.2 * len(df):
+        print(f"Skipping column {column} — no valid samples after filtering")
+        return None, None, None
+    else:
+        huber = HuberRegressor()
+        degree = 2
+        model = make_pipeline(PolynomialFeatures(degree), huber)
+        model.fit(X, y)
 
-    return model, coefficients, intercept
+        coefficients = huber.coef_
+
+        return model, coefficients
 
 
 def white_test(df, column, X_feature_name, model):
 
-    X = df[X_feature_name].values
+    X = df[[X_feature_name]].values
     y = df[column].values
     #sort y by x
     L = sorted(zip(X,y))
@@ -48,32 +51,30 @@ def white_test(df, column, X_feature_name, model):
 
 def scores(df, column, X_feature_name, model):
 
-    X = df[X_feature_name].values
+    X = df[[X_feature_name]].values
     y = df[column].values
     #sort y by x
     L = sorted(zip(X,y))
     new_x, new_y = zip(*L)
 
-    new_y = new_y - model.predict(new_x)
-    mean = np.mean(new_y)
-    std = np.std(new_y, ddof=1)
-    skewness = skew(new_y)
-    kurt = kurtosis(new_y)
+    residuals = np.array(new_y) - model.predict(new_x)
 
-    mad = stats.median_abs_deviation(new_y)
-    median = np.median(new_y)
-
-    q1 = np.quantile(new_y, 0.25)
-    q3 = np.quantile(new_y, 0.75)
-    iqr = q3 - q1
-    min_value = np.min(new_y)
-    max_value = np.max(new_y)
-
-    return mean, std, skewness, kurt, mad, median, iqr, min_value, max_value
+    result = {
+        "mean": np.mean(residuals),
+        "std": np.std(residuals, ddof=1),
+        "skewness": skew(residuals),
+        "kurtosis": kurtosis(residuals),
+        "mad": stats.median_abs_deviation(residuals),
+        "median": np.median(residuals),
+        "iqr": np.quantile(residuals, 0.75) - np.quantile(residuals, 0.25),
+        "min": np.min(residuals),
+        "max": np.max(residuals),
+    }
+    return result
 
 
 def calculate_quantiles(df, column, X_feature_name, quantiles, model):
-    X = df[X_feature_name].values
+    X = df[[X_feature_name]].values
     y = df[column].values
     #sort y by x
     L = sorted(zip(X,y))
@@ -96,7 +97,7 @@ def calculate_quantiles(df, column, X_feature_name, quantiles, model):
 def calculate_normality(df, column, X_feature_name, df_scores):
 
     df_abnormalities = pd.DataFrame()
-    X = df[X_feature_name].values
+    X = df[[X_feature_name]].values
     y = df[column].values
     function_value = np.squeeze(df_scores.loc[column, 'intercept'] +df_scores.loc[column, '1']+ df_scores.loc[column, 'x']*X + df_scores.loc[column, 'x^2']*X**2)
     new_y = y - function_value

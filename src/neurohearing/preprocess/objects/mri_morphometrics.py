@@ -1,5 +1,6 @@
-import pandas as pd
 import neurohearing.common.tools as tools
+import pandas as pd
+
 
 class MRI_morphometics():
     def __init__(self,   
@@ -31,46 +32,61 @@ class MRI_morphometics():
         print(f"Kept {len(cols_to_keep)} columns out of {len(self.data_mri.columns)} after filtering zeros and NaNs")
         self.data_mri = self.data_mri[cols_to_keep].copy()
 
-        
 
-    def filter_outliers(self, age_label='age', n_std=6, removed_ids_output_path="removed_identifiers.csv", age_bins=None):
-        data_mri_original = self.data_mri.copy()
+    def calculate_mean_in_ranges(self, age_label='age', age_ranges=[(0,5), (5,10), (10, 18), (18,65), (65,100)], exclude_cols=['hight', 'weight'] ):    
+        self.data_mri = self.data_mri.drop(columns=["Unnamed: 0"] + exclude_cols)
         numeric_cols = self.data_mri.select_dtypes(include='number').columns
 
-        '''
-        if age_bins is None:
-            min_age = int(self.data_mri[age_label].min())
-            max_age = int(self.data_mri[age_label].max())
-            age_bins = list(range(min_age, max_age + 10, 10))
-    
-        # przypisz grupy wiekowe
-        self.data_mri['age_group'] = pd.cut(self.data_mri[age_label], bins=age_bins)
-        '''
+        self.data_mri['age_group'] = pd.cut(
+            self.data_mri[age_label],
+            bins=[r[0] for r in age_ranges] + [age_ranges[-1][1]],
+            labels=[str(r) for r in age_ranges],
+            include_lowest=True
+        )
+
+        grouped = self.data_mri.groupby('age_group')[numeric_cols].agg(['mean', 'std'])
+        grouped.columns = [f"{col}_{stat}" for col, stat in grouped.columns]
+        self.mean_std_age_ranges = grouped
+
+        print(self.mean_std_age_ranges)
+
+
+    def filter_outliers(self, age_label='age', n_std=6):
+        if not hasattr(self, "mean_std_age_ranges"):
+            raise ValueError("Run calculate_mean_in_ranges() before filter_outliers()")
+
+        self.data_mri_original = self.data_mri.copy()
+        numeric_cols = self.data_mri.select_dtypes(include='number').columns
 
         mask_total = pd.Series(True, index=self.data_mri.index)
         outliers_list = []
 
         for col in numeric_cols:
-            #for age_group, group_df in self.data_mri.groupby('age_group', observed=True):
-            mean = self.data_mri[col].mean()
-            std = self.data_mri[col].std()
-            difference = (self.data_mri[col] - mean) / std
-            mask = (difference >= - n_std) & (difference <= n_std)
+            if col != age_label:
+                for age_group, group_df in self.data_mri.groupby('age_group', observed=True):
+                    mean = self.mean_std_age_ranges.loc[age_group, f'{col}_mean']
+                    std  = self.mean_std_age_ranges.loc[age_group, f'{col}_std']
+                    difference = (group_df[col] - mean) / std
+                    mask = (difference >= - n_std) & (difference <= n_std)
 
-            outliers = self.data_mri.loc[~mask, ['identifier', col]].copy()
-            outliers['difference_in_std'] = difference[~mask]
-            outliers['column'] = col
-            outliers_list.append(outliers)
-            mask_total &= mask
+                    mask_total.loc[group_df.index] &= mask
+
+                    outliers = group_df.loc[~mask, ['identifier', col]].copy()
+                    outliers['difference_in_std'] = difference[~mask]
+                    outliers['column'] = col
+                    outliers_list.append(outliers)
 
         self.data_mri = self.data_mri[mask_total].copy()
-
         print("Outliers filtered using ±6σ rule.")
+
+        return outliers_list
+
+       
+    def save_outliers(self, outliers_list, removed_ids_output_path="removed_identifiers.csv"):
         removed_df = pd.concat(outliers_list, ignore_index=True)
         removed_df = removed_df.dropna(subset=['difference_in_std'])
         removed_df = removed_df.loc[removed_df.groupby('identifier')['difference_in_std'].idxmax()]
-
-        print(f"Removed identifiers: {len(removed_df)} before: {data_mri_original.shape} after: {self.data_mri.shape}")
+        print(f"Removed identifiers: {len(removed_df)} before: {self.data_mri_original.shape} after: {self.data_mri.shape}")
 
         removed_df = removed_df[['identifier', 'column', 'difference_in_std']]
         removed_df = removed_df.sort_values(

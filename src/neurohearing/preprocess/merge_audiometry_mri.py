@@ -27,7 +27,10 @@ def main(args):
     if not os.path.exists(config["resultsdirectory"]):
         os.makedirs(config["resultsdirectory"])
 
-    mri_morpohometrics.filter_outliers(n_std=6, removed_ids_output_path=removed_ids_output_path)
+    mri_morpohometrics.calculate_mean_in_ranges(args.label_name, age_ranges=[(0,5), (5,10), (10, 18), (18,65), (65,100)], exclude_cols=args.exclude_cols)    
+
+    outliers_list = mri_morpohometrics.filter_outliers(age_label=args.label_name, n_std=6)
+    mri_morpohometrics.save_outliers(outliers_list, removed_ids_output_path=removed_ids_output_path)
 
     mri_morpohometrics.merge_with_audiometry(data_audiometry)
     mri_morpohometrics.choose_closest_examinations(tonal_suffix)
@@ -57,5 +60,9 @@ if __name__=="__main__":
                         nargs="?", 
                         default="removed_identifiers",
                         help="Filename for audiometry mri merged")
+    parser.add_argument("--exclude_cols", 
+                        nargs="+",     
+                        default=['hight', 'weight'], 
+                        help="Columns to exclude from processing")
     args = parser.parse_args()
     main(args)

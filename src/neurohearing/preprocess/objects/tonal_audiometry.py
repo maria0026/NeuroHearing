@@ -129,7 +129,7 @@ class TonalAudiometry():
                 group_to_keep = group[group[self.date_column] == latest_date]
         else:
             return group
-        if group_to_keep.shape[0] > 2:
+        if group_to_keep.shape[0] > 1:
             merged_row = group_to_keep.iloc[0].combine_first(group_to_keep.iloc[1])
             return self.keep_first_delete_second(group_to_keep, ear, 'EAR_SIDE', merged_row)
         else:
@@ -261,9 +261,13 @@ class TonalAudiometry():
     def calculate_mean_ear_pta(self, PTA2_columns, PTA4_columns, hf_columns):
         numeric_cols = PTA2_columns + PTA4_columns + hf_columns
         text_cols = [col for col in self.data.columns if col not in numeric_cols]
-
+        valid_mini_dfs = [] 
         for i, mini_df in enumerate(self.mini_dfs):
             grouped = {g: d for g, d in mini_df.groupby("GROUP")} #group by air and bone
+            if "air" not in grouped:
+                print(f"[Info] Skipping mini_df {i}: no 'air' group found.")
+                continue
+
             for key, group in grouped.items():
                 if key == "air": #calculate only for air audiometry
                     sym = grouped["air"].iloc[0]['SYMETRIA'] #symmetry condition
@@ -288,6 +292,8 @@ class TonalAudiometry():
                     self.mini_dfs[i]['PTA2'] = group['PTA2']
                     self.mini_dfs[i]['PTA4'] = group['PTA4']
                     self.mini_dfs[i]['hfPTA'] = group['hfPTA']
+                    valid_mini_dfs.append(mini_df)
+        self.mini_dfs = valid_mini_dfs
         print('PTA calculation completed.')
 
 

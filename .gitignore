@@ -10,3 +10,4 @@ build
 /neurohearing.egg-info
 *.csv#
 /results
+/plots

@@ -3,34 +3,61 @@ import neurohearing.common.tools as tools
 
 def main():
 
-    config = tools.load_config()
+    config = tools.load_config("config.yaml")
     tonaldataname=config["tonaldataname"]
     tonal_suffix = tonaldataname.split("_")[-1]
-    tonal_audiometry_datapath = config["datainterimdirectory"] + tonaldataname + '.csv'
+    tonal_audiometry_datapath = config["datarawdirectory"] + tonaldataname + '.csv'
+    implants_datapath = config["datarawdirectory"] + config['implants'] + '.csv'
+
 
     tonal_audiometry_processor = TonalAudiometry(tonal_audiometry_datapath, 
                                                  tonal_suffix, 
-                                                 match_columnnames=config['match_columns'],
-                                                 columnnames={'pesel_columnname': config["pesel_columnname"],
+                                                 implants_datapath,
+                                                 columnnames={'patient_number_columnname': config["patient_number_columnname"],
                                                                 'audiometry_earside_columnname': config['audiometry_earside_columnname'],
                                                                 'date_column': config['date_column'],
-                                                                'type_column': config['audiometry_type_columnname']
+                                                                'type_column': config['audiometry_type_columnname'],
+                                                                'description_column': config['description_columnname']
                                                                },
-                                                 air_audiometry=config['air_audiometry'],
+                                                 implant_columnnames={"patient_identifier_columnname": config['patient_identifier_columnname'],
+                                                                    'age_of_occurence_columnname': config['age_of_occurence_columnname'],
+                                                                    'age_of_recognition_columnname': config['age_of_recognition_columnname'],
+                                                                    'implant_date_columnname': config['implant_date_columnname'],
+                                                                    'implant_ear_columnname': config['implant_ear_columnname'],
+                                                                    'second_implant_date_columnname': config['second_implant_date_columnname'],
+                                                                    'second_implant_ear_columnname':  config['second_implant_ear_columnname']
+                                                                },
+                                                air_audiometry=config['air_audiometry'],
                                                  bone_audiometry=config['bone_audiometry']
                                                  )
+    #tonal_audiometry_processor.merge_implants()
+    tonal_audiometry_processor.filter_audiometry_type()
     tonal_audiometry_processor.patients_dfs()
-    tonal_audiometry_processor.merge_mask()
+    tonal_audiometry_processor.add_audiometry_group_and_ear_column()
+    tonal_audiometry_processor.merge_masked()
+
+    #tonal_audiometry_processor.mark_implanted_ear()
+    #tonal_audiometry_processor.delete_implanted_ear()
 
     PTA2_columns = config["pta_columns"]["PTA2"]
     PTA4_columns = config["pta_columns"]["PTA4"]
     hfPTA_columns = config["pta_columns"]["hfPTA"]
 
-    tonal_audiometry_processor.calculate_pta(PTA2_columns, PTA4_columns, hfPTA_columns)
-    tonal_audiometry_processor.save_processed_df(config["dataprocesseddirectory"])
+    first_symmetry_columns = config["first_symmetry_columns"]
+    second_symmetry_columns = config["second_symmetry_columns"]
 
-    tonal_audiometry_processor.select_better_air_pta()
-    tonal_audiometry_processor.save_processed_to_mri_df(config["dataprocesseddirectory"])
+    tonal_audiometry_processor.define_symmetry(first_symmetry_columns, second_symmetry_columns, config["threshold_def1"], config["threshold_def2"])
+    tonal_audiometry_processor.calculate_mean_ear_pta(PTA2_columns, PTA4_columns, hfPTA_columns)
+
+    tonal_audiometry_processor.classificate_hearing_loss(config["biap_hearing_levels"], config["asha_hearing_levels"])
+
+    tonal_audiometry_processor.hearing_type_pta_and_bone_audiometry(config["pta_threshold"], config["bone_all_mean_columns"])
+    
+    tonal_audiometry_processor.hearing_type_differences_between_audiometries(config['first_opt_columns'], threshold=config['first_opt_threshold'], how_many_values=config['first_opt_how_many'])
+    tonal_audiometry_processor.classificate_hearing_loss_type(config["hearing_loss_criteria"])
+
+
+    tonal_audiometry_processor.save_processed_df(config["dataprocesseddirectory"])
 
 
 if __name__=="__main__":

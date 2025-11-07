@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import numpy as np
 
 class TonalAudiometry():
     def __init__(self, 
@@ -119,7 +120,7 @@ class TonalAudiometry():
         if group.shape[0] == 2:
             group_to_keep = group
         elif group.shape[0] > 2:
-            if group[self.description_col].notna().any():
+            if group[self.description_col].isna().any():
                 for _, group_minutes in group.groupby(self.date_column):
                     if group_minutes[self.description_col].isna().any():
                         group_to_keep = group_minutes
@@ -128,9 +129,11 @@ class TonalAudiometry():
                 group_to_keep = group[group[self.date_column] == latest_date]
         else:
             return group
-        
-        merged_row = group_to_keep.iloc[0].combine_first(group_to_keep.iloc[1])
-        return self.keep_first_delete_second(group_to_keep, ear, 'EAR_SIDE', merged_row)
+        if group_to_keep.shape[0] > 2:
+            merged_row = group_to_keep.iloc[0].combine_first(group_to_keep.iloc[1])
+            return self.keep_first_delete_second(group_to_keep, ear, 'EAR_SIDE', merged_row)
+        else:
+            return group_to_keep
 
 
     def merge_masked(self):
@@ -361,7 +364,7 @@ class TonalAudiometry():
 
     def check_differences_opt1(self, diff_df, threshold=10, how_many=3, expected_length=4):
         diff_df = diff_df.dropna(axis=1, how='all')
-        if (diff_df.shape[1]!=expected_length):
+        if (diff_df.shape[1]<expected_length):
             return "brak_obl"
 
         row = diff_df.iloc[0]
@@ -389,6 +392,20 @@ class TonalAudiometry():
                 group[f'first_option_{threshold}_diff'] = self.check_differences_opt1(diff_opt_1, threshold=threshold, how_many=how_many_values, expected_length=len(first_opt_columns))
                 self.mini_dfs[i].loc[group.index, 'first_option_zero_diff'] = group['first_option_zero_diff'].astype('object')
                 self.mini_dfs[i].loc[group.index, f'first_option_{threshold}_diff'] = group[f'first_option_{threshold}_diff'].astype('object')
+                self.mini_dfs[i].loc[group.index, f'15_diff'] = group[f'15_diff'].astype('object')
+
+                col1 = pd.to_numeric(group[f'first_option_{threshold}_diff'], errors='coerce')
+                col2 = pd.to_numeric(group['15_diff'], errors='coerce')
+
+                rezerwa = np.where(
+                    col1.eq(1) | col2.eq(1), 1,    #jeśli którakolwiek kolumna ma 1 → 1
+                    np.where(
+                        col1.isna() & col2.isna(), np.nan,  #jeśli obie NaN → NaN (później zamienimy na brak_obl)
+                        0                              #w pozostałych przypadkach → 0
+                    )
+                )
+                self.mini_dfs[i].loc[group.index, 'REZERWA'] = pd.Series(rezerwa, index=group.index).replace({np.nan: "brak_obl"})
+
 
                 if not diff_opt_1.empty:
                     for col in diff_opt_1.columns:

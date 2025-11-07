@@ -2,8 +2,13 @@
 datarawdirectory: data/raw/
 datainterimdirectory: data/interim/
 dataprocesseddirectory: data/processed/
+datacalculationsdirectory: data/calculations/
 dataname: export_all_tables
 mri_dataname: mri
+genetic_name: genetic
+implants: implanty
+genetic_dataname_all: DFNB1_1620
+genetic_dataname: DFNB1_2025-10-10
 mapping: anon_mapping
 resultsdirectory: results/
 
@@ -30,30 +35,37 @@ audiometry_dropcolumns:
 
 # Columns used for matching patient data; these will not be renamed
 match_columns:
-  - "PESEL"
-  - "NUMER_W_JEDNOSTCE"
   - "NUMER_HISTORII_CHOROBY"
+  - "NUMER_W_JEDNOSTCE"
 
 tonaldataname: audiometry_tonal
 verbaldataname: audiometry_verbal
 freefielddataname: audiometry_free_field
 
+#tonal audiometry columns
 date_column: "DATA_BADANIA"
-description_column: "OPIS_BADANIA"
+description_columnname: "OPIS_BADANIA"
 audiometry_name_columnname: "NAZWA_AUDIOMETRII"
 audiometry_earside_columnname: "UWAGI_DO_AUDIOMETRII"
 audiometry_type_columnname: "TYP_AUDIOMETRII"
+patient_number_columnname: "NUMER_HISTORII_CHOROBY"
 pesel_columnname: "PESEL"
 
+#implants columns
+patient_identifier_columnname: "PATID"
+age_of_occurence_columnname: "WIEK_WYSTAPIENIA"
+age_of_recognition_columnname: "WIEK_ROZPOZNANIA"
+implant_date_columnname: "1_IMPLANT_SLIMAKOWY_DATA_WSZCZEPIENIA"
+implant_ear_columnname: "1_IMPLANT_SLIMAKOWY_UCHO"
+second_implant_date_columnname: "2_IMPLANT_SLIMAKOWY_DATA WSZCZEPIENIA"
+second_implant_ear_columnname: "2_IMPLANT_SLIMAKOWY_UCHO"
+
 mask_merging_columns:
-  - "PESEL"
+  - "NUMER_HISTORII_CHOROBY"
   - "UWAGI_DO_AUDIOMETRII"
 
-bone_audiometry:
-  - ["BoneMask", "Bone"]
-
-air_audiometry:
-  - ["AirMask", "Air"]
+bone_audiometry: ["BoneMask", "Bone"]
+air_audiometry: ["AirMask", "Air"]
 
 pta_columns:
   PTA2:
@@ -68,3 +80,96 @@ pta_columns:
   hfPTA:
     - WYNIK_X_4000
     - WYNIK_X_8000
+
+first_symmetry_columns:
+  - WYNIK_X_125
+  - WYNIK_X_250
+  - WYNIK_X_500
+  - WYNIK_X_750
+  - WYNIK_X_1000
+  - WYNIK_X_1500
+  - WYNIK_X_2000
+  - WYNIK_X_3000
+  - WYNIK_X_4000
+  - WYNIK_X_6000
+  - WYNIK_X_8000
+
+second_symmetry_columns:
+  - WYNIK_X_2000
+  - WYNIK_X_3000
+  - WYNIK_X_4000
+  - WYNIK_X_6000
+  - WYNIK_X_8000
+
+threshold_def1: 20
+threshold_def2: 15
+
+biap_hearing_levels:
+  - { max: 20, label: "Prawidlowy" }
+  - { max: 40, label: "Lekki" }
+  - { max: 70, label: "Umiarkowany" }
+  - { max: 90, label: "Znaczny" }
+  - { max: 150, label: "Gleboki" }
+
+asha_hearing_levels:
+  - { max: 15, label: "Prawidlowy" }
+  - { max: 25, label: "Nieznaczny" }
+  - { max: 40, label: "Lekki" }
+  - { max: 55, label: "Umiarkowany" }
+  - { max: 70, label: "Umiarkowanie_ciezki" }
+  - { max: 90, label: "Znaczny" }
+  - { max: 150, label: "Gleboki" }
+
+#hearing loss type
+pta_threshold: 20
+
+bone_all_mean_columns:
+  - "WYNIK_X_500"
+  - "WYNIK_X_1000"
+  - "WYNIK_X_2000"
+  - "WYNIK_X_4000"
+
+first_opt_columns:
+  - "WYNIK_X_250"
+  - "WYNIK_X_500"
+  - "WYNIK_X_1000"
+  - "WYNIK_X_2000"
+first_opt_threshold: 10
+first_opt_how_many: 3
+
+second_opt_columns:
+  - "WYNIK_X_250"
+  - "WYNIK_X_500"
+  - "WYNIK_X_1000"
+  - "WYNIK_X_2000"
+  - "WYNIK_X_4000"
+
+hearing_loss_criteria:
+  Sluch_prawidlowy:
+    air:
+      PTA4_condition: 1
+      first_option_zero_diff: 1
+    bone:
+      bone_mean_condition: 1
+
+  Niedosluch_przewodzeniowy:
+    air:
+      PTA4_condition: 0
+      first_option_10_diff: 1
+    bone:
+      bone_mean_condition: 1
+
+  Niedosluch_odbiorczy:
+    air:
+      PTA4_condition: 0
+      hfPTA_condition: 0
+      first_option_zero_diff: 1
+    bone:
+      bone_mean_condition: 0
+
+  Niedosluch_mieszany:
+    air:
+      PTA4_condition: 0
+      first_option_10_diff: 1
+    bone:
+      bone_mean_condition: 0

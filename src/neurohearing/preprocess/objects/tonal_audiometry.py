@@ -336,7 +336,7 @@ class TonalAudiometry():
         group['bone_mean_condition'] = pd.Series(dtype='object')
 
         for idx, row in group.iterrows():
-            if row[bone_mean_columns].isna().any():
+            if row[bone_mean_columns].isna().all():
                 group.loc[idx, 'bone_mean'] = "brak_obl"
                 group.loc[idx, 'bone_mean_condition'] = "brak_obl"
             else:
@@ -347,7 +347,7 @@ class TonalAudiometry():
         return group
 
 
-    def hearing_type_pta_and_bone_audiometry(self, threshold, bone_mean_columns):
+    def hearing_type_pta_and_bone_audiometry(self, threshold, bone_mean_columns, bone_hf_mean_columns):
         for i, mini_df in enumerate(self.mini_dfs):
             mini_df = self.hearing_loss_type_cond1(mini_df, threshold)
             grouped = {g: d for g, d in mini_df.groupby("GROUP")}
@@ -356,6 +356,9 @@ class TonalAudiometry():
                     group = self.hearing_loss_type_cond2(group, bone_mean_columns, threshold)
                     self.mini_dfs[i]['bone_mean'] = group['bone_mean']
                     self.mini_dfs[i]['bone_mean_condition'] = group['bone_mean_condition']
+                    group = self.hearing_loss_type_cond2(group, bone_hf_mean_columns, threshold)
+                    self.mini_dfs[i]['bone_mean_hf'] = group['bone_mean']
+                    self.mini_dfs[i]['bone_mean_condition_hf'] = group['bone_mean_condition']
 
 
     def check_differences_opt1_zero(self, diff_df, value = 0, expected_length=4):
@@ -396,6 +399,7 @@ class TonalAudiometry():
 
                 group['first_option_zero_diff'] = self.check_differences_opt1_zero(diff_opt_1, value=0, expected_length=len(first_opt_columns))
                 group[f'first_option_{threshold}_diff'] = self.check_differences_opt1(diff_opt_1, threshold=threshold, how_many=how_many_values, expected_length=len(first_opt_columns))
+                group[f'15_diff'] = self.check_differences_opt1(diff_opt_1, threshold=15, how_many=1, expected_length=1)
                 self.mini_dfs[i].loc[group.index, 'first_option_zero_diff'] = group['first_option_zero_diff'].astype('object')
                 self.mini_dfs[i].loc[group.index, f'first_option_{threshold}_diff'] = group[f'first_option_{threshold}_diff'].astype('object')
                 self.mini_dfs[i].loc[group.index, f'15_diff'] = group[f'15_diff'].astype('object')
@@ -439,14 +443,12 @@ class TonalAudiometry():
                             break
                         for col, expected in conditions.items():
                             #jeśli wartość nie pasuje do oczekiwanego, nie dopasowujemy
+                            #if ear_row[col].item() != 'brak_obl':
                             if ear_row[col].item() != expected:
-                                if ear_row[col].item() == 'brak_obl':
-                                    self.mini_dfs[i].loc[:, 'hearing_type'] = "nie okreslono"
-                                    ear_assigned = True
+                                    #if ear_row[col].item() == 'brak_obl':
+                                        #self.mini_dfs[i].loc[:, 'hearing_type'] = "nie okreslono"
+                                        #ear_assigned = True
                                 match = False
-                                break
-                        if not match:
-                            break
                     if match:
                         #przypisanie typu ubytku do wszystkich wierszy tego ucha
                         indices = grouped['air'][grouped['air']['EAR_SIDE'] == ear].index
@@ -458,7 +460,6 @@ class TonalAudiometry():
                     #jeśli żaden typ nie pasuje, oznaczamy jako "nie określono"
                     indices = mini_df[mini_df['EAR_SIDE'] == ear].index
                     self.mini_dfs[i].loc[indices, 'hearing_type'] = "zaden typ nie pasuje"
-
 
     def save_processed_df(self, output_path):
         merged_df = pd.concat(self.mini_dfs, ignore_index=True)

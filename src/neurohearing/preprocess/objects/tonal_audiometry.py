@@ -6,9 +6,7 @@ class TonalAudiometry():
     def __init__(self, 
                   path, 
                   tonal_suffix,
-                  implants_datapath,
                   columnnames,
-                  implant_columnnames,
                   air_audiometry=["AirMask", "Air"],
                   bone_audiometry=["BoneMask", "Bone"],
                   vibro_audiometry=["Vibro", "VibroMask"]):
@@ -25,6 +23,7 @@ class TonalAudiometry():
         self.date_column = columnnames['date_column']
         self.type_col = columnnames['type_column']
         self.description_col = columnnames['description_column']
+        self.pesel_column = columnnames['pesel_columnname']
 
         self.tonal_suffix = tonal_suffix
         self.air_audiometry = air_audiometry
@@ -32,20 +31,14 @@ class TonalAudiometry():
         self.vibro_audiometry = vibro_audiometry
         self.ears = ['L', 'P']
 
-        self.path_implants = implants_datapath
 
-        self.implant_ear_columnname = implant_columnnames['implant_ear_columnname']
-        self.implant_date_columnname = implant_columnnames['implant_date_columnname']
-        self.implant_ear_second_columnname = implant_columnnames['second_implant_ear_columnname']
-        self.implant_date_second_columnname = implant_columnnames['second_implant_date_columnname']
-
-
+    '''
     def merge_implants(self):
         implanty = pd.read_csv(self.path_implants, sep=None, engine='python', dtype={self.genetic_patient_id_column: str}, encoding='cp1250')
         implanty.columns = implanty.columns.str.upper()
         
         self.data = pd.merge(self.data, implanty, how='left', on=self.genetic_patient_id_column)
-
+    '''
 
     def filter_audiometry_type(self):
         #filter vibro
@@ -215,14 +208,21 @@ class TonalAudiometry():
                 elif (bone_df is None) and (vibro_df is not None):
                     air_df = self.fill_air_audiometry(air_df, columns_to_fill)
                     group.loc[air_df.index, :] = air_df
+                elif (air_df is None) and (vibro_df is None):
+                    group = None
 
                 ears_grouped[key] = group 
 
-            mini_df = pd.concat(ears_grouped.values(), ignore_index=True)       
+            valid_groups = [g for g in ears_grouped.values() if g is not None]
+
+            if len(valid_groups) == 0:
+                continue
+
+            mini_df = pd.concat(valid_groups, ignore_index=True)     
             valid_mini_dfs.append(mini_df)
         self.mini_dfs = valid_mini_dfs
 
-
+    '''
     def mark_implanted_ear(self):
         for i, mini_df in enumerate(self.mini_dfs):
             ears_grouped = {g: d for g, d in mini_df.groupby("EAR_SIDE")}
@@ -265,7 +265,7 @@ class TonalAudiometry():
             if not df.empty:
                 cleaned.append(df)
         self.mini_dfs = cleaned
-
+    '''
 
     def compute_diff(self, mini_df, columns, suffix='_diff'):
         diff = mini_df[columns].diff().iloc[1:]  # bierzemy tylko drugi wiersz
@@ -385,6 +385,7 @@ class TonalAudiometry():
 
     def classificate_hearing_loss(self, biap_hearing_levels, asha_hearing_levels):
         for i, mini_df in enumerate(self.mini_dfs):
+            #print(mini_df)
             mini_df["BIAP"] = mini_df['PTA4'].apply(lambda x: self.map_hearing_level(biap_hearing_levels, x))
             mini_df["ASHA"] = mini_df['PTA4'].apply(lambda x: self.map_hearing_level(asha_hearing_levels, x))
         print("Hearing loss calculation completed")

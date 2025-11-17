@@ -49,7 +49,7 @@ class NeurohearingAnalyser(TonalAudiometry):
 
             merged_df = pd.concat(self.mini_dfs, ignore_index=True)
             merged_df[self.date_column] = merged_df[self.date_column].dt.strftime("%d.%m.%Y %H:%M")
-            new_df = merged_df.loc[:, [self.pesel_column, self.date_column, 'IF_FIRST', 'L_BIAP', 'R_BIAP', 'L_HEARING_TYPE', 'P_HEARING_TYPE']]
+            new_df = merged_df.loc[:, [self.pesel_column, self.date_column, 'IF_FIRST', 'L_BIAP', 'P_BIAP', 'L_HEARING_TYPE', 'P_HEARING_TYPE']]
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
             new_df.to_csv(f'{output_path}audiometry_{self.tonal_suffix}_summarized.csv', index=False)

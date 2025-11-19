@@ -116,6 +116,8 @@ second_symmetry_columns:
   - WYNIK_X_6000
   - WYNIK_X_8000
 
+filling_limit: 110
+
 threshold_def1: 20
 threshold_def2: 15
 
@@ -212,4 +214,15 @@ hearing_loss_criteria:
       REZERWA: 1
     bone:
       bone_mean_condition: 0
+
+Datasets:
+  prawidlowy:
+    - "Prawidlowy"
+    - "Prawidlowy"
+
+  gleboki:
+    - "Gleboki"
+    - "Gleboki"
+
+  
 

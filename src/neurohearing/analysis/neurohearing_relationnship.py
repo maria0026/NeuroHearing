@@ -6,9 +6,11 @@ def main():
     tonaldataname=config["tonaldataname"]
     tonal_suffix = tonaldataname.split("_")[-1]
     datapath = config["dataprocesseddirectory"] + tonaldataname+'.csv'
+    mri_datapath = config["datarawdirectory"]+ config['mri_dataname'] + '.csv'
 
 
     neurohearing_analyser = NeurohearingAnalyser(datapath, 
+                                                 mri_datapath,
                                                 tonal_suffix, 
                                                 columnnames={'patient_number_columnname': config["patient_number_columnname"],
                                                             'pesel_columnname': config["pesel_columnname"],
@@ -26,6 +28,7 @@ def main():
     neurohearing_analyser.patients_dfs()
     neurohearing_analyser.choose_first_examination()
     neurohearing_analyser.create_dataframe_for_merging(config["datacalculationsdirectory"])
+    neurohearing_analyser.create_disinct_datasets(config['Datasets'], config["datacalculationsdirectory"])
     #neurohearing_analyser.save_processed_df(config["datacalculationsdirectory"])
 
 

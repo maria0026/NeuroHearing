@@ -223,6 +223,18 @@ Datasets:
   gleboki:
     - "Gleboki"
     - "Gleboki"
+  
+  znaczny:
+    - "Znaczny"
+    - "Znaczny"
+
+  lekki:
+    - "Lekki"
+    - "Lekki"
+
+  umiarkowany:
+    - "Umiarkowany"
+    - "Umiarkowany"
 
   
 
